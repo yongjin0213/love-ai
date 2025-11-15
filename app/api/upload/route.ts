@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
         mimeType,
       },
       analysis,
-      next: '/api/analyze',
     });
   } catch (error) {
     console.error('[upload-route]', error);
