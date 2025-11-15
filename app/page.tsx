@@ -24,7 +24,6 @@ export default function Home() {
   
   // Analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<UploadAnalysisResponse[]>([])
   const [showResults, setShowResults] = useState(false)
   
@@ -126,7 +125,6 @@ export default function Home() {
     }
 
     setIsAnalyzing(true)
-    setProgress(0)
     setError('')
     setResults([])
     setShowResults(false)
@@ -156,7 +154,6 @@ export default function Home() {
         const result = payload as UploadAnalysisResponse
         setResults((prev) => [...prev, result])
 
-        setProgress(((i + 1) / images.length) * 100)
       }
 
       setShowResults(true)
@@ -171,7 +168,6 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Failed to analyze images. Please try again.')
     } finally {
       setIsAnalyzing(false)
-      setProgress(0)
     }
   }
 
@@ -412,20 +408,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* Progress Bar */}
-            {isAnalyzing && (
-              <div className="mt-4">
-                <div className="w-full bg-muted rounded-full h-2.5">
-                  <div
-                    className="bg-primary h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2 text-center">
-                  Analyzing... {Math.round(progress)}%
-                </p>
-              </div>
-            )}
+            {/* Progress indicator removed */}
 
             {/* Error Message */}
             {error && (
