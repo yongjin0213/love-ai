@@ -1,58 +1,88 @@
-// This is a mock API route for frontend testing
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+
+import { parseClaudeResponse, runScreenshotAnalysis } from '@/lib/analysis';
+
+export const runtime = 'nodejs';
+
+const MAX_BASE64_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
+const BASE64_REGEX = /^[a-z0-9+/=\s]+$/i;
+
+const normalizeBase64Image = (
+  imageBase64: unknown,
+  mimeType?: unknown,
+): string | null => {
+  if (typeof imageBase64 !== 'string' || imageBase64.length === 0) return null;
+
+  if (imageBase64.startsWith('data:')) {
+    return imageBase64;
+  }
+
+  const sanitized = imageBase64.replace(/^data:[^;]+;base64,/, '').trim();
+  if (sanitized.length === 0 || !BASE64_REGEX.test(sanitized)) return null;
+
+  const normalizedMime =
+    typeof mimeType === 'string' && mimeType.startsWith('image/')
+      ? mimeType
+      : 'image/png';
+
+  return `data:${normalizedMime};base64,${sanitized}`;
+};
+
+const calculateBase64Size = (dataUrl: string): number => {
+  const [, encoded] = dataUrl.split(',');
+  if (!encoded) return 0;
+  return Buffer.byteLength(encoded, 'base64');
+};
 
 export async function POST(request: NextRequest) {
-    try {
-        // Get the uploaded image from FormData
-        const formData = await request.formData()
-        const image = formData.get('image') as File
+  try {
+    const body = await request.json();
+    const normalizedImage = normalizeBase64Image(
+      body?.imageBase64,
+      body?.mimeType,
+    );
 
-        if (!image) {
-            return NextResponse.json(
-                { error: 'No image provided' },
-                { status: 400 }
-            )
-        }
-
-        // Validate file type
-        if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif'].includes(image.type)) {
-            return NextResponse.json(
-                { error: 'Invalid file type. Please upload a PNG, JPG, or GIF image.' },
-                { status: 400 }
-            )
-        }
-
-        // Simulate processing delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        // Generate a random score between 50-95 for demo purposes
-        const score = Math.floor(Math.random() * 45) + 50
-
-        // Create different assessment messages based on score
-        let overallAssessment = ''
-
-        if (score >= 80) {
-            overallAssessment = "The conversation shows strong indicators of romantic interest. The person demonstrates consistent engagement, uses emotionally expressive language, and responds with enthusiasm. They appear to prioritize your conversations and show genuine curiosity about you. The linguistic patterns suggest they're invested in building a deeper connection."
-        } else if (score >= 70) {
-            overallAssessment = "There are positive signs of romantic interest in this conversation. The person shows good engagement and uses warm, friendly language. While not overtly romantic, the patterns suggest they enjoy talking with you and value your connection. Their responses indicate interest, though they may be taking things slowly or being cautious."
-        } else if (score >= 50) {
-            overallAssessment = "The conversation shows mixed signals. While there's friendly engagement, the romantic interest indicators are moderate. They respond but may not always initiate or show deep emotional investment. This could mean they're interested but uncertain, prefer taking things very slow, or see you primarily as a friend but are open to more."
-        } else {
-            overallAssessment = "Based on the conversation patterns, romantic interest appears limited. The responses are friendly but show characteristics more typical of platonic relationships. The language lacks romantic undertones, emotional depth is moderate, and engagement patterns suggest casual friendship rather than romantic pursuit. However, remember that some people express interest differently or may be very reserved."
-        }
-
-        // Return the analysis result
-        return NextResponse.json({
-            score: score,
-            overallAssessment: overallAssessment,
-        })
-
-    } catch (error) {
-        console.error('Analysis error:', error)
-        return NextResponse.json(
-            { error: 'Failed to analyze conversation. Please try again.' },
-            { status: 500 }
-        )
+    if (!normalizedImage) {
+      return NextResponse.json(
+        {
+          error:
+            'Provide an `imageBase64` string formatted as a data URL or raw base64 payload.',
+        },
+        { status: 400 },
+      );
     }
+
+    const byteLength = calculateBase64Size(normalizedImage);
+    if (byteLength === 0 || byteLength > MAX_BASE64_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: 'Screenshot must be a non-empty image <= 10MB.' },
+        { status: 413 },
+      );
+    }
+
+    const filename =
+      typeof body?.filename === 'string' ? body.filename : undefined;
+    const { rawResponse } = await runScreenshotAnalysis({
+      imageBase64: normalizedImage,
+      filename,
+    });
+    const parsed = parseClaudeResponse(rawResponse);
+    if (!parsed) {
+      return NextResponse.json(
+        {
+          error: 'Claude returned a response that was not valid JSON.',
+          rawClaude: rawResponse,
+        },
+        { status: 502 },
+      );
+    }
+    return NextResponse.json(parsed);
+  } catch (error) {
+    console.error('[analyze-route]', error);
+    return NextResponse.json(
+      { error: 'Unable to analyze the screenshot right now.' },
+      { status: 500 },
+    );
+  }
 }

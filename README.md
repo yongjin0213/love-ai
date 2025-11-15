@@ -1,3 +1,40 @@
+# Love Data
+Love Data is an AI-powered text analzyer that takes in text messages and helps users understand relationship dynamics through conversation patterns. This tool will output a Love Score, a 0-100 score that reflects compatabilty, and feedback on what went well and what went poorly during the conversation. 
+
+## About This Project
+
+### What It Does
+Love Bot analyzes text message conversations to identify:
+
+- Communication patterns - Message lengths, unique language, and engagement levels
+- Sentiment analysis - Emotional tone and enthusiasm in messages
+- Interaction metrics - Question asking and conversation initiation
+- Interest indicators - Signs of engagement, effort, and reciprocity
+
+The bot generates a percentage score representing estimated interest based on various conversational signals.
+
+
+### How It Works
+
+- Upload Messages - Users can upload text message exports or paste conversations
+- AI Analysis - The bot processes messages using natural language processing
+- Pattern Detection - Identifies key indicators of interest and engagement
+- Score Generation - Produces an interest percentage with detailed breakdown
+- Insights Report - Provides actionable feedback about the conversation dynamics
+
+
+## Technology Stack
+
+Fullstack: **Next.js**
+
+AI/ML: **Claude API**
+
+## Contributers
+- **Yongjin Lee**
+- **Kathy Lim**
+- **Aiden Joo**
+- **Mark Sheen**
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
