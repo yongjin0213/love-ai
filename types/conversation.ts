@@ -6,7 +6,6 @@ export interface ConversationMessage {
   id: string;
   sender: 'personA' | 'personB';
   text: string;
-  timestamp?: string;
 }
 
 export interface MessageInsight {

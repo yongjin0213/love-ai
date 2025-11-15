@@ -13,7 +13,7 @@ You are a texting coach. Analyze the provided screenshot that represents a text 
 Return ONLY valid JSON that matches this TypeScript schema:
 {
   "analysis": {
-    "parsedMessages": { "id": string, "sender": "personA" | "personB", "text": string, "timestamp"?: string }[],
+    "parsedMessages": { "id": string, "sender": "personA" | "personB", "text": string }[],
     "romanticInterestScore": number, // 0-100 integer
     "confidence": "Low" | "Medium" | "High",
     "summary": string,
@@ -30,7 +30,8 @@ Return ONLY valid JSON that matches this TypeScript schema:
   "queryContextId": string
 }
 
-Focus on whether Person B shows romantic interest toward Person A.
+Person A should represent the texter whose romantic interest we are evaluating, and Person B should represent the other participant (the user reviewing this analysis).
+Focus on whether Person A shows romantic interest toward Person B.
 Strip away any markdown fences or commentary—respond with raw JSON only.
 `;
 
@@ -42,7 +43,7 @@ const extractMimeType = (dataUrl: string): string => {
   return match ? match[1] : 'image/png';
 };
 
-const parseClaudeResponse = (
+export const parseClaudeResponse = (
   payload: unknown,
 ): ScreenshotAnalysisResult | null => {
   if (!payload) return null;
@@ -67,15 +68,19 @@ const parseClaudeResponse = (
   return null;
 };
 
+export interface ClaudeAnalysisPayload {
+  rawResponse: string;
+}
+
 const callClaude = async (
   params: ScreenshotAnalysisParams,
-): Promise<ScreenshotAnalysisResult> => {
-  const apiKey = process.env.CLAUDE_API_KEY;
+): Promise<ClaudeAnalysisPayload> => {
+  const apiKey = process.env.ANTHROPIC_AI_KEY;
   if (!apiKey) throw new Error('Claude API key not configured.');
 
   const body = {
     model: CLAUDE_MODEL,
-    max_tokens: 1024,
+    max_tokens: 2048,
     temperature: 0,
     system: buildPrompt(),
     messages: [
@@ -83,11 +88,11 @@ const callClaude = async (
         role: 'user',
         content: [
           {
-            type: 'input_text',
+            type: 'text',
             text: 'Please analyze this screenshot and return the JSON result.',
           },
           {
-            type: 'input_image',
+            type: 'image',
             source: {
               type: 'base64',
               media_type: extractMimeType(params.imageBase64),
@@ -121,15 +126,12 @@ const callClaude = async (
   );
   const jsonChunk =
     typeof textBlock?.text === 'string' ? textBlock.text.trim() : '';
-  const parsed = parseClaudeResponse(jsonChunk || data);
-  if (!parsed) {
-    throw new Error('Claude response could not be parsed into JSON.');
-  }
-  return parsed;
+  const rawResponse = jsonChunk || JSON.stringify(data);
+  return { rawResponse };
 };
 
 export const runScreenshotAnalysis = async (
   params: ScreenshotAnalysisParams,
-): Promise<ScreenshotAnalysisResult> => {
+): Promise<ClaudeAnalysisPayload> => {
   return callClaude(params);
 };

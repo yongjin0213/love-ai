@@ -1,8 +1,12 @@
 // components/ImageUploader.tsx
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
+
+import type {
+  MessageImpact,
+  ScreenshotAnalysisResult,
+} from '@/types/conversation';
 
 export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
@@ -10,7 +14,9 @@ export default function Home() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const router = useRouter();
+  const [results, setResults] = useState<UploadAnalysisResponse[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorRawClaude, setErrorRawClaude] = useState<string | null>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -66,61 +72,55 @@ export default function Home() {
 
     setIsAnalyzing(true);
     setProgress(0);
+    setErrorMessage(null);
+    setResults([]);
+    setErrorRawClaude(null);
 
     try {
-      const allAnalyses = [];
-
-      // Upload and analyze each image sequentially
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
-        
-        // Create FormData for this specific image
         const formData = new FormData();
         formData.append('file', file);
 
-        // Upload to your existing route
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
 
+        const payload = (await uploadResponse.json()) as UploadAnalysisResponse & {
+          error?: string;
+          rawClaude?: string;
+        };
+
         if (!uploadResponse.ok) {
-          const error = await uploadResponse.json();
-          throw new Error(error.error || 'Upload failed');
+          setErrorRawClaude(payload.rawClaude ?? null);
+          throw new Error(payload.error || 'Upload failed');
         }
 
-        const result = await uploadResponse.json();
-        allAnalyses.push(result.analysis);
+        const result = payload as UploadAnalysisResponse;
+        setResults((prev) => [...prev, result]);
 
-        // Update progress
         setProgress(((i + 1) / images.length) * 100);
       }
-
-      // Now send all analyses to the analyze endpoint if needed
-      // Or if your upload route already does the full analysis, 
-      // you can calculate the final score here
-      
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ analyses: allAnalyses }),
-      });
-
-      const data = await response.json();
-      
-      // Redirect to results page
-      router.push(`/analysis/${data.analysisId}`);
-      
     } catch (error) {
       console.error('Analysis failed:', error);
       alert(error instanceof Error ? error.message : 'Failed to analyze images. Please try again.');
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to analyze images. Please try again.');
     } finally {
       setIsAnalyzing(false);
       setProgress(0);
     }
   };
+
+  const impactStyles = useMemo(
+    () =>
+      ({
+        helped: 'border-green-200 bg-green-50 text-green-900',
+        neutral: 'border-yellow-200 bg-yellow-50 text-yellow-900',
+        hurt: 'border-red-200 bg-red-50 text-red-900',
+      }) satisfies Record<MessageImpact, string>,
+    [],
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -280,6 +280,140 @@ export default function Home() {
           </button>
         </div>
       )}
+
+      {errorMessage && (
+        <div className="mt-6 space-y-4">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {errorMessage}
+          </div>
+          {errorRawClaude && (
+            <details className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+              <summary className="cursor-pointer font-medium text-gray-900">
+                Raw Claude response (error)
+              </summary>
+              <pre className="mt-3 overflow-auto rounded bg-white p-3 text-xs text-gray-800">
+{errorRawClaude}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <section className="mt-12 space-y-8">
+          <h2 className="text-2xl font-semibold">Analysis Results</h2>
+          {results.map((result, index) => {
+            const payload = result.analysis.analysis;
+            const insights = payload?.messageInsights ?? [];
+            const messageMap = new Map(
+              (payload?.parsedMessages ?? []).map((message) => [message.id, message]),
+            );
+
+            const rawJsonDisplay = (() => {
+              if (result.rawClaude) {
+                try {
+                  return JSON.stringify(JSON.parse(result.rawClaude), null, 2);
+                } catch {
+                  return result.rawClaude;
+                }
+              }
+              return JSON.stringify(result.analysis, null, 2);
+            })();
+
+            return (
+              <article
+                key={`${result.file?.name ?? 'upload'}-${index}`}
+                className="rounded-2xl border border-gray-200 p-6 shadow-sm"
+              >
+                <header className="flex flex-col gap-2 border-b border-gray-100 pb-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm uppercase text-gray-500">Romantic Interest Score</p>
+                    <p className="text-4xl font-bold text-blue-600">
+                      {payload?.romanticInterestScore ?? '--'}%
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>
+                      Confidence:{' '}
+                      <span className="font-semibold text-gray-900">
+                        {payload?.confidence ?? 'Unknown'}
+                      </span>
+                    </p>
+                    {result.file?.name && <p>Source file: {result.file.name}</p>}
+                    <p>Query context: {result.analysis.queryContextId}</p>
+                  </div>
+                </header>
+
+                {payload?.summary && (
+                  <p className="mt-4 text-lg text-gray-800">{payload.summary}</p>
+                )}
+
+                {payload?.suggestions?.length ? (
+                  <div className="mt-6">
+                    <h3 className="text-base font-semibold text-gray-900">Coaching Tips</h3>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-gray-700">
+                      {payload.suggestions.map((suggestion, suggestionIndex) => (
+                        <li key={suggestionIndex}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {insights.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-base font-semibold text-gray-900">Message Insights</h3>
+                    <div className="mt-3 space-y-3">
+                      {insights.map((insight) => {
+                        const message = messageMap.get(insight.messageId);
+                        const impactClass = impactStyles[insight.impact];
+                        return (
+                          <div
+                            key={insight.messageId}
+                            className={`rounded-xl border p-4 ${impactClass}`}
+                          >
+                            <div className="flex items-center justify-between text-sm uppercase">
+                              <span>{insight.impact}</span>
+                              <span className="text-gray-600">
+                                {insight.sender === 'personB' ? 'You' : 'Person A'}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-base font-medium">
+                              {message?.text ?? 'Message text unavailable.'}
+                            </p>
+                            <p className="mt-1 text-sm text-gray-700">{insight.explanation}</p>
+                            <p className="mt-1 text-xs text-gray-600">
+                              Confidence: {insight.confidence}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <details className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                  <summary className="cursor-pointer font-medium text-gray-900">
+                    Raw JSON response
+                  </summary>
+                  <pre className="mt-3 overflow-auto rounded bg-white p-3 text-xs text-gray-800">
+{rawJsonDisplay}
+                  </pre>
+                </details>
+              </article>
+            );
+          })}
+        </section>
+      )}
     </div>
   );
 }
+
+type UploadAnalysisResponse = {
+  file?: {
+    name: string;
+    size: number;
+    mimeType: string;
+  };
+  analysis: ScreenshotAnalysisResult;
+  rawClaude?: string;
+};
