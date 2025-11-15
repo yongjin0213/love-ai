@@ -1,10 +1,10 @@
-# Love Data
-Love Data is an AI-powered text analzyer that takes in text messages and helps users understand relationship dynamics through conversation patterns. This tool will output a Love Score, a 0-100 score that reflects compatabilty, and feedback on what went well and what went poorly during the conversation. 
+# Arrows
+Arrows is an AI-powered text analzyer that takes in text messages and helps users understand relationship dynamics through conversation patterns. This tool will output a Love Score, a 0-100 score that reflects compatabilty, and feedback on what went well and what went poorly during the conversation. 
 
 ## Project overview
 
 ### What It Does
-Love Bot analyzes text message conversations to identify:
+Arrows analyzes text message conversations to identify:
 
 - Communication patterns - Message lengths, unique language, and engagement levels
 - Sentiment analysis - Emotional tone and enthusiasm in messages
