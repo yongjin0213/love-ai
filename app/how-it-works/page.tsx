@@ -15,7 +15,7 @@ export default function HowItWorks() {
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                             <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
                         </div>
-                        <span className="font-semibold text-lg text-foreground">LoveData</span>
+                        <span className="font-semibold text-lg text-foreground">Arrows</span>
                     </div>
                     {/* Removed sign in button */}
                 </div>
@@ -24,9 +24,9 @@ export default function HowItWorks() {
             {/* Page Header */}
             <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="mb-12">
-                    <h1 className="text-5xl font-bold text-foreground mb-4">How LoveData Works</h1>
+                    <h1 className="text-5xl font-bold text-foreground mb-4">How Arrows Works</h1>
                     <p className="text-xl text-muted-foreground max-w-3xl">
-                        Our advanced AI model analyzes text patterns, emotional language, and engagement indicators to give you data-driven insights into romantic interest.
+                        Our advanced AI model analyzes text patterns, emotional language, and engagement indicators to give you AI-driven insights into romantic interest.
                     </p>
                 </div>
             </section>
@@ -144,7 +144,7 @@ export default function HowItWorks() {
                             <h3 className="text-2xl font-bold text-foreground">Communication Over Analysis</h3>
                         </div>
                         <p className="text-muted-foreground mb-4">
-                            LoveData is a tool for clarity, not a substitute for genuine human connection. Our analysis should empower you to have honest conversations, not replace them. The best relationships are built on direct communication about feelings and intentions.
+                            Arrow is a tool for clarity, not a substitute for genuine human connection. Our analysis should empower you to have honest conversations, not replace them. The best relationships are built on direct communication about feelings and intentions.
                         </p>
                         <div className="bg-muted/30 border border-border/20 rounded-lg p-4 mt-4">
                             <p className="text-sm text-muted-foreground">
