@@ -12,9 +12,12 @@ export default function HowItWorks() {
             <nav className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                            <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
-                        </div>
+                        
+                            <img 
+                              src="/love-ai.svg" 
+                              alt="Arrows logo" 
+                              className="w-5 h-5 text-primary"
+                            />
                         <span className="font-semibold text-lg text-foreground">Arrows</span>
                     </div>
                     {/* Removed sign in button */}
