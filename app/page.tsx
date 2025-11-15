@@ -1,6 +1,8 @@
 // app/page.tsx
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useRef, useCallback } from 'react'
 import { Heart, TrendingUp, MessageSquare, Zap, Upload, Send, AlertCircle } from '@/components/icons'
 import { Button } from '@/components/ui/button'
@@ -252,7 +254,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
             </div>
-            <span className="font-semibold text-lg text-foreground">LoveData</span>
+            <span className="font-semibold text-lg text-foreground">Arrows</span>
           </div>
           <div className="flex items-center gap-4">
             <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleStartAnalysis}>
@@ -275,7 +277,7 @@ export default function Home() {
                 Never Second Guess <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Love Again</span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                Stop overthinking. Get data-driven insights into romantic emotions from your text conversations. Finally, let science settle your heart&rsquo;s questions.
+                Stop overthinking. Get AI-driven insights into romantic emotions from your text conversations. Finally, let science settle your heart&rsquo;s questions.
               </p>
             </div>
 
@@ -283,9 +285,11 @@ export default function Home() {
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8" onClick={handleStartAnalysis}>
                 Start Analysis
               </Button>
-              <Button size="lg" variant="outline" className="px-8">
-                See How It Works
-              </Button>
+              <Link href="/how-it-works">
+                <Button size="lg" variant="outline" className="px-8">
+                  See How It Works
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -324,7 +328,7 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">
-            How LoveData Works
+            How Arrow Works
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Three simple steps to turn confusion into clarity
