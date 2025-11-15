@@ -1,4 +1,4 @@
-import type { ScreenshotAnalysisResult } from '@/types/conversation';
+import type { ConversationMessage, CupidResponse, ScreenshotAnalysisResult } from '@/types/conversation';
 
 const CLAUDE_MODEL = 'claude-opus-4-1-20250805';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -137,4 +137,92 @@ export const runScreenshotAnalysis = async (
   params: ScreenshotAnalysisParams,
 ): Promise<ClaudeAnalysisPayload> => {
   return callClaude(params);
+};
+
+const buildCupidPrompt = () => `
+You are Cupid, a dating coach who gives tactful, supportive advice.
+Given a chat transcript and a question, respond with JSON:
+{
+  "answer": string, // conversational, actionable reply
+  "tips": string[] // 2-4 bullet coaching tips tailored to the question
+}
+Refer to the user as "you" and the other participant as "Target".
+Do not include markdown fences or commentary—JSON only.
+`;
+
+const formatConversationForCupid = (messages: ConversationMessage[]) =>
+  messages
+    .map((message) => {
+      const speaker = message.sender === 'personB' ? 'You' : 'Target';
+      return `${speaker}: ${message.text}`;
+    })
+    .join('\n');
+
+export const askCupidQuestion = async (
+  conversation: ConversationMessage[],
+  question: string,
+): Promise<CupidResponse> => {
+  const apiKey = process.env.ANTHROPIC_AI_KEY;
+  if (!apiKey) throw new Error('Claude API key not configured.');
+
+  const body = {
+    model: CLAUDE_MODEL,
+    max_tokens: 1024,
+    temperature: 0.2,
+    system: buildCupidPrompt(),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `Chat Transcript:\n${formatConversationForCupid(
+              conversation,
+            )}\n\nQuestion: ${question}`,
+          },
+        ],
+      },
+    ],
+  };
+
+  const response = await fetch(CLAUDE_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Claude API error: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = Array.isArray(data?.content) ? data.content : [];
+  const textBlock = content.find(
+    (item: { type?: string }) => item?.type === 'text',
+  );
+  const jsonChunk =
+    typeof textBlock?.text === 'string' ? textBlock.text.trim() : '';
+
+  try {
+    const parsed = JSON.parse(jsonChunk);
+    if (
+      parsed &&
+      typeof parsed.answer === 'string' &&
+      Array.isArray(parsed.tips)
+    ) {
+      return {
+        answer: parsed.answer,
+        tips: parsed.tips.map((tip: unknown) => String(tip)),
+      };
+    }
+  } catch {
+    // fallthrough
+  }
+
+  throw new Error('Cupid response could not be parsed into JSON.');
 };
