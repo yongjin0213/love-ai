@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { runScreenshotAnalysis } from '@/lib/analysis';
+import { parseClaudeResponse, runScreenshotAnalysis } from '@/lib/analysis';
 
 export const runtime = 'nodejs';
 
@@ -71,10 +71,20 @@ export async function POST(request: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${mimeType};base64,${base64}`;
 
-    const analysis = await runScreenshotAnalysis({
+    const { rawResponse } = await runScreenshotAnalysis({
       imageBase64: dataUrl,
       filename: file.name,
     });
+    const parsed = parseClaudeResponse(rawResponse);
+    if (!parsed) {
+      return NextResponse.json(
+        {
+          error: 'Claude returned a response that was not valid JSON.',
+          rawClaude: rawResponse,
+        },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
       file: {
@@ -82,7 +92,8 @@ export async function POST(request: NextRequest) {
         size: buffer.length,
         mimeType,
       },
-      analysis,
+      analysis: parsed,
+      rawClaude: rawResponse,
     });
   } catch (error) {
     console.error('[upload-route]', error);
