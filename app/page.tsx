@@ -563,6 +563,11 @@ export default function Home() {
                                 </span>
                               </div>
                               <p className="font-medium mb-1">{insight.explanation}</p>
+                              {(insight.messageText || messageMap.get(insight.messageId)) && (
+                                <p className="text-xs text-foreground/90 mb-1">
+                                  &ldquo;{insight.messageText || messageMap.get(insight.messageId)?.text}&rdquo;
+                                </p>
+                              )}
                               <p className="text-xs opacity-75">Confidence: {insight.confidence}</p>
                             </div>
                           )

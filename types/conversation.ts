@@ -13,6 +13,7 @@ export interface MessageInsight {
   sender: ConversationMessage['sender'];
   impact: MessageImpact;
   explanation: string;
+  messageText: string;
   confidence: ConfidenceLevel;
 }
 

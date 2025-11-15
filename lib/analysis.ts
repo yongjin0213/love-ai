@@ -22,6 +22,7 @@ Return ONLY valid JSON that matches this TypeScript schema:
       "sender": "personA" | "personB",
       "impact": "helped" | "neutral" | "hurt",
       "explanation": string,
+      "messageText": string,
       "confidence": "Low" | "Medium" | "High"
     }[],
     "suggestions": string[],
