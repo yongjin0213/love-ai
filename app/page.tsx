@@ -277,7 +277,7 @@ export default function Home() {
                 Never Second Guess <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Love Again</span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                Stop overthinking. Get AI-driven insights into romantic emotions from your text conversations. Finally, let science settle your heart&rsquo;s questions.
+                Stop overthinking. Get AI-driven insights into romantic emotions from your text conversations.
               </p>
             </div>
 
@@ -350,7 +350,7 @@ export default function Home() {
             {
               icon: TrendingUp,
               title: "Get Your Score",
-              description: "Receive a romantic interest percentage with detailed explanations backing the analysis."
+              description: "Receive a romantic interest percentage with detailed message-by-message explanations backing the analysis."
             }
           ].map((feature, idx) => (
             <div key={idx} className="group relative">
