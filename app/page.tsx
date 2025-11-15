@@ -4,7 +4,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Heart, TrendingUp, MessageSquare, Zap, Upload, Send, AlertCircle } from '@/components/icons'
 import { Button } from '@/components/ui/button'
-import type { ScreenshotAnalysisResult } from '@/types/conversation'
+import type { CupidResponse, ScreenshotAnalysisResult } from '@/types/conversation'
 
 type UploadAnalysisResponse = {
   file?: {
@@ -26,6 +26,10 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [results, setResults] = useState<UploadAnalysisResponse[]>([])
   const [showResults, setShowResults] = useState(false)
+  const [cupidQuestion, setCupidQuestion] = useState('')
+  const [cupidResponse, setCupidResponse] = useState<CupidResponse | null>(null)
+  const [isCupidLoading, setIsCupidLoading] = useState(false)
+  const [cupidError, setCupidError] = useState<string | null>(null)
   
   // Error state
   const [error, setError] = useState<string>('')
@@ -128,6 +132,9 @@ export default function Home() {
     setError('')
     setResults([])
     setShowResults(false)
+    setCupidQuestion('')
+    setCupidResponse(null)
+    setCupidError(null)
     setErrorRawClaude(null)
 
     try {
@@ -168,6 +175,47 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Failed to analyze images. Please try again.')
     } finally {
       setIsAnalyzing(false)
+    }
+  }
+
+  const handleAskCupid = async () => {
+    if (!cupidQuestion.trim()) {
+      setCupidError('Ask Cupid a specific question to get tailored advice.')
+      return
+    }
+    const firstResult = results[0]
+    const payload = firstResult?.analysis.analysis
+    if (!payload?.parsedMessages?.length) {
+      setCupidError('Cupid needs at least one analyzed conversation to respond.')
+      return
+    }
+
+    setIsCupidLoading(true)
+    setCupidError(null)
+    setCupidResponse(null)
+
+    try {
+      const response = await fetch('/api/cupid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: cupidQuestion.trim(),
+          conversation: payload.parsedMessages,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Cupid could not answer that question.')
+      }
+      setCupidResponse(data as CupidResponse)
+    } catch (err) {
+      console.error('Cupid query failed:', err)
+      setCupidError(
+        err instanceof Error ? err.message : 'Cupid could not answer that question.',
+      )
+    } finally {
+      setIsCupidLoading(false)
     }
   }
 
@@ -558,6 +606,62 @@ export default function Home() {
                       </div>
                     </div>
                   )}
+
+                  {payload?.parsedMessages?.length ? (
+                    <div className="mt-6 rounded-xl border border-border/60 bg-card/40 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="text-base font-semibold text-foreground">Ask Cupid</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Ask follow-up questions and get personalized guidance.
+                          </p>
+                        </div>
+                      </div>
+                      <textarea
+                        value={cupidQuestion}
+                        onChange={(e) => setCupidQuestion(e.target.value)}
+                        placeholder="e.g. How do I ask Target out after this conversation?"
+                        rows={3}
+                        className="w-full rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground focus:border-primary focus:outline-none"
+                        disabled={isCupidLoading || isAnalyzing}
+                      />
+                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <Button
+                          size="sm"
+                          onClick={handleAskCupid}
+                          disabled={
+                            isCupidLoading ||
+                            isAnalyzing ||
+                            !cupidQuestion.trim() ||
+                            payload.parsedMessages.length === 0
+                          }
+                        >
+                          {isCupidLoading ? 'Cupid is thinking...' : 'Ask Cupid'}
+                        </Button>
+                        {cupidError && (
+                          <p className="text-xs text-destructive">{cupidError}</p>
+                        )}
+                      </div>
+                      {cupidResponse && (
+                        <div className="mt-4 rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground">
+                          <p className="font-semibold mb-2">Cupid says:</p>
+                          <p className="text-muted-foreground">{cupidResponse.answer}</p>
+                          {cupidResponse.tips?.length ? (
+                            <div className="mt-3">
+                              <p className="text-xs font-semibold uppercase text-foreground tracking-wide mb-1">
+                                Coaching Tips
+                              </p>
+                              <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                {cupidResponse.tips.map((tip, tipIndex) => (
+                                  <li key={tipIndex}>{tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               )
             })}

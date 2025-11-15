@@ -34,3 +34,8 @@ export interface ScreenshotAnalysisResult {
   analysis: RomanticAnalysis;
   queryContextId: string;
 }
+
+export interface CupidResponse {
+  answer: string;
+  tips: string[];
+}
