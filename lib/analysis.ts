@@ -31,7 +31,9 @@ Return ONLY valid JSON that matches this TypeScript schema:
 }
 
 Person A should represent the texter whose romantic interest we are evaluating, and Person B should represent the other participant (the user reviewing this analysis).
-Focus on whether Person A shows romantic interest toward Person B.
+Whenever you refer to Person A in any part of the response, call them "Target".
+Whenever you refer to Person B, speak directly using second-person pronouns (you/your).
+Focus on whether Target shows romantic interest toward you.
 Strip away any markdown fences or commentary—respond with raw JSON only.
 `;
 

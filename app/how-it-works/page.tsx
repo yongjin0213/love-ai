@@ -1,6 +1,8 @@
 'use client'
 
-import { Heart, Zap, Brain, Lock, BarChart3, MessageSquare, CheckCircle, AlertCircle, Users } from 'lucide-react'
+import Link from 'next/link'
+
+import { Heart, Zap, Brain, Lock, BarChart3, MessageSquare, CheckCircle, AlertCircle, Users } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 
 export default function HowItWorks() {
@@ -126,11 +128,11 @@ export default function HowItWorks() {
                             <h3 className="text-2xl font-bold text-foreground">Respect Consent</h3>
                         </div>
                         <p className="text-muted-foreground mb-4">
-                            Only analyze conversations you have explicit permission to share. If you're analyzing a text with someone, they should feel comfortable knowing you're looking for romantic signals. Privacy and consent are the foundation of healthy relationships.
+                            Only analyze conversations you have explicit permission to share. If you&rsquo;re analyzing a text with someone, they should feel comfortable knowing you&rsquo;re looking for romantic signals. Privacy and consent are the foundation of healthy relationships.
                         </p>
                         <div className="bg-muted/30 border border-border/20 rounded-lg p-4 mt-4">
                             <p className="text-sm text-muted-foreground">
-                                <strong>Best Practice:</strong> Consider if you'd be comfortable telling your crush that you analyzed your conversation together.
+                                <strong>Best Practice:</strong> Consider if you&rsquo;d be comfortable telling your crush that you analyzed your conversation together.
                             </p>
                         </div>
                     </div>
@@ -146,7 +148,7 @@ export default function HowItWorks() {
                         </p>
                         <div className="bg-muted/30 border border-border/20 rounded-lg p-4 mt-4">
                             <p className="text-sm text-muted-foreground">
-                                <strong>Pro Tip:</strong> Use our insights as a conversation starter, not a decision maker. "I feel like we connect really well, where do you see this going?" is way better than basing decisions solely on text analysis.
+                                <strong>Pro Tip:</strong> Use our insights as a conversation starter, not a decision maker. &ldquo;I feel like we connect really well, where do you see this going?&rdquo; is way better than basing decisions solely on text analysis.
                             </p>
                         </div>
                     </div>
@@ -175,7 +177,7 @@ export default function HowItWorks() {
                             <h3 className="text-2xl font-bold text-foreground">Protect Your Mental Health</h3>
                         </div>
                         <p className="text-muted-foreground mb-4">
-                            If you find yourself constantly analyzing every message or obsessing over a score, that's a sign to step back. Healthy relationships don't require this much analysis. If you're struggling with anxiety about someone's interest level, it might be worth talking to a trusted friend or therapist.
+                            If you find yourself constantly analyzing every message or obsessing over a score, that&rsquo;s a sign to step back. Healthy relationships don&rsquo;t require this much analysis. If you&rsquo;re struggling with anxiety about someone&rsquo;s interest level, it might be worth talking to a trusted friend or therapist.
                         </p>
                         <div className="bg-muted/30 border border-border/20 rounded-lg p-4 mt-4">
                             <p className="text-sm text-muted-foreground">
@@ -191,11 +193,11 @@ export default function HowItWorks() {
                             <h3 className="text-2xl font-bold text-foreground">Respect Their Agency</h3>
                         </div>
                         <p className="text-muted-foreground mb-4">
-                            A high interest score doesn't mean you're owed a relationship. A low score doesn't mean you should give up. Respect the other person's right to choose, to change their mind, to be unsure, or to simply not be interested. Use our tool as information, not justification.
+                            A high interest score doesn&rsquo;t mean you&rsquo;re owed a relationship. A low score doesn&rsquo;t mean you should give up. Respect the other person&rsquo;s right to choose, to change their mind, to be unsure, or to simply not be interested. Use our tool as information, not justification.
                         </p>
                         <div className="bg-muted/30 border border-border/20 rounded-lg p-4 mt-4">
                             <p className="text-sm text-muted-foreground">
-                                <strong>Key Principle:</strong> Healthy love is never about convincing someone. If they're interested, they'll show it in their actions, not just their texts.
+                                <strong>Key Principle:</strong> Healthy love is never about convincing someone. If they&rsquo;re interested, they&rsquo;ll show it in their actions, not just their texts.
                             </p>
                         </div>
                     </div>
@@ -223,11 +225,11 @@ export default function HowItWorks() {
             <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-border/40">
                 <h2 className="text-4xl font-bold text-foreground mb-6">Ready to Get Clarity?</h2>
                 {/* Changed to Start Analysis button that links to landing page */}
-                <a href="/#analysis">
+                <Link href="/#analysis">
                     <Button size="lg" className="bg-primary hover:bg-primary/90 px-8">
                         Start Analysis
                     </Button>
-                </a>
+                </Link>
             </section>
         </main>
     )

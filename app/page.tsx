@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Heart, TrendingUp, MessageSquare, Zap, Upload, Send, AlertCircle } from 'lucide-react'
+import { Heart, TrendingUp, MessageSquare, Zap, Upload, Send, AlertCircle } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import type { ScreenshotAnalysisResult } from '@/types/conversation'
 
@@ -35,6 +35,7 @@ export default function Home() {
   // Refs
   const uploadRef = useRef<HTMLElement>(null)
   const resultsRef = useRef<HTMLElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleStartAnalysis = () => {
     uploadRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -50,60 +51,72 @@ export default function Home() {
     }
   }, [])
 
+  const addImages = useCallback((newFiles: File[]) => {
+    if (images.length > 0) {
+      setError('Remove the current screenshot before uploading another.')
+      return
+    }
+
+    const [file] = newFiles
+    if (!file) return
+
+    // Validate files
+    const isInvalidType = !['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)
+    const isTooLarge = file.size > 10 * 1024 * 1024
+
+    if (isInvalidType || isTooLarge) {
+      setError('Invalid screenshot. Please upload PNG, JPG, GIF, or WEBP under 10MB.')
+      return
+    }
+
+    setImages([file])
+    setError('')
+
+    // Create previews
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPreviews([reader.result as string])
+    }
+    reader.readAsDataURL(file)
+  }, [images])
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
 
+    if (images.length > 0) {
+      setError('Remove the current screenshot before uploading another.')
+      return
+    }
+
     const files = Array.from(e.dataTransfer.files).filter(file =>
       file.type.startsWith('image/')
-    )
+    ).slice(0, 1)
 
     if (files.length > 0) {
       addImages(files)
     }
-  }, [])
+  }, [images, addImages])
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files)
+      if (images.length > 0) {
+        setError('Remove the current screenshot before uploading another.')
+        return
+      }
+      const files = Array.from(e.target.files).slice(0, 1)
       addImages(files)
     }
-  }
-
-  const addImages = (newFiles: File[]) => {
-    // Validate files
-    const invalidFiles = newFiles.filter(file => {
-      if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
-        return true
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        return true
-      }
-      return false
-    })
-
-    if (invalidFiles.length > 0) {
-      setError('Some files are invalid. Please upload PNG, JPG, GIF, or WEBP images under 10MB.')
-      return
-    }
-
-    setImages(prev => [...prev, ...newFiles])
-    setError('')
-
-    // Create previews
-    newFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviews(prev => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
   }
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index))
     setPreviews(prev => prev.filter((_, i) => i !== index))
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    setError('')
   }
 
   const handleAnalyze = async () => {
@@ -218,7 +231,7 @@ export default function Home() {
                 Never Second Guess <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Love Again</span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                Stop overthinking. Get data-driven insights into romantic emotions from your text conversations. Finally, let science settle your heart's questions.
+                Stop overthinking. Get data-driven insights into romantic emotions from your text conversations. Finally, let science settle your heart&rsquo;s questions.
               </p>
             </div>
 
@@ -245,7 +258,7 @@ export default function Home() {
                   <div className="h-full w-3/4 bg-gradient-to-r from-primary to-accent rounded-full"></div>
                 </div>
                 <p className="text-sm text-muted-foreground pt-4">
-                  "They seem genuinely interested based on response patterns and emotional language."
+                  &ldquo;They seem genuinely interested based on response patterns and emotional language.&rdquo;
                 </p>
                 <div className="pt-6 space-y-3 border-t border-border/40">
                   <div className="flex items-center gap-2 text-sm">
@@ -320,7 +333,13 @@ export default function Home() {
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              onClick={() => document.getElementById('screenshot-input')?.click()}
+              onClick={() => {
+                if (images.length > 0) {
+                  setError('Remove the current screenshot before uploading another.')
+                  return
+                }
+                document.getElementById('screenshot-input')?.click()
+              }}
               className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex items-center justify-center cursor-pointer group ${
                 isDragging
                   ? 'border-primary bg-primary/5'
@@ -333,8 +352,8 @@ export default function Home() {
                 {images.length > 0 ? (
                   <>
                     <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
-                    <p className="text-foreground font-medium">{images.length} file{images.length > 1 ? 's' : ''} selected</p>
-                    <p className="text-sm text-muted-foreground mt-1">Click to add more</p>
+                    <p className="text-foreground font-medium">1 screenshot selected</p>
+                    <p className="text-sm text-muted-foreground mt-1">Remove it to upload a different one</p>
                   </>
                 ) : (
                   <>
@@ -350,9 +369,9 @@ export default function Home() {
               id="screenshot-input"
               type="file"
               accept="image/*"
-              multiple
               className="hidden"
               onChange={handleFileInput}
+              ref={fileInputRef}
             />
 
             {/* Image Previews */}
@@ -540,7 +559,7 @@ export default function Home() {
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs uppercase font-semibold">{insight.impact}</span>
                                 <span className="text-xs">
-                                  {insight.sender === 'personB' ? 'You' : 'Them'}
+                                  {insight.sender === 'personB' ? 'You' : 'Target'}
                                 </span>
                               </div>
                               <p className="font-medium mb-1">{insight.explanation}</p>
@@ -572,7 +591,7 @@ export default function Home() {
                   💜 Ethical Considerations
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  This analysis is based on text patterns and should not be treated as definitive proof of someone's feelings. Human emotions are complex and context-dependent. Always prioritize:
+                  This analysis is based on text patterns and should not be treated as definitive proof of someone&rsquo;s feelings. Human emotions are complex and context-dependent. Always prioritize:
                 </p>
                 <ul className="space-y-3 text-muted-foreground">
                   <li className="flex gap-2">
@@ -590,13 +609,13 @@ export default function Home() {
                   <li className="flex gap-2">
                     <span className="text-primary font-bold">•</span>
                     <div>
-                      <strong className="text-foreground">Respect:</strong> Respect the other person's boundaries and pace
+                      <strong className="text-foreground">Respect:</strong> Respect the other person&rsquo;s boundaries and pace
                     </div>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary font-bold">•</span>
                     <div>
-                      <strong className="text-foreground">Mental Health:</strong> If you're obsessing over signals, consider talking to a trusted friend or professional
+                      <strong className="text-foreground">Mental Health:</strong> If you&rsquo;re obsessing over signals, consider talking to a trusted friend or professional
                     </div>
                   </li>
                   <li className="flex gap-2">
