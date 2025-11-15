@@ -1,20 +1,38 @@
+// app/page.tsx
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Heart, TrendingUp, MessageSquare, Zap, Upload, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { ScreenshotAnalysisResult } from '@/types/conversation'
 
-interface AnalysisResult {
-  score: number;
-  overallAssessment: string;
-}
+type UploadAnalysisResponse = {
+  file?: {
+    name: string;
+    size: number;
+    mimeType: string;
+  };
+  analysis: ScreenshotAnalysisResult;
+  rawClaude?: string;
+};
 
 export default function Home() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [showResults, setShowResults] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+  // File upload state
+  const [images, setImages] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
+  const [isDragging, setIsDragging] = useState(false)
+  
+  // Analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [results, setResults] = useState<UploadAnalysisResponse[]>([])
+  const [showResults, setShowResults] = useState(false)
+  
+  // Error state
   const [error, setError] = useState<string>('')
+  const [errorRawClaude, setErrorRawClaude] = useState<string | null>(null)
+  
+  // Refs
   const uploadRef = useRef<HTMLElement>(null)
   const resultsRef = useRef<HTMLElement>(null)
 
@@ -22,53 +40,112 @@ export default function Home() {
     uploadRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const handleFileSelect = (file: File) => {
-    // Validate file type
-    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif'].includes(file.type)) {
-      setError('Please upload a PNG, JPG, or GIF image')
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragging(true)
+    } else if (e.type === 'dragleave') {
+      setIsDragging(false)
+    }
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files).filter(file =>
+      file.type.startsWith('image/')
+    )
+
+    if (files.length > 0) {
+      addImages(files)
+    }
+  }, [])
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files)
+      addImages(files)
+    }
+  }
+
+  const addImages = (newFiles: File[]) => {
+    // Validate files
+    const invalidFiles = newFiles.filter(file => {
+      if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
+        return true
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        return true
+      }
+      return false
+    })
+
+    if (invalidFiles.length > 0) {
+      setError('Some files are invalid. Please upload PNG, JPG, GIF, or WEBP images under 10MB.')
       return
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB')
-      return
-    }
-
-    setSelectedFile(file)
+    setImages(prev => [...prev, ...newFiles])
     setError('')
+
+    // Create previews
+    newFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleAnalyze = async () => {
-    if (!selectedFile) {
-      setError('Please upload a screenshot first')
+    if (images.length === 0) {
+      setError('Please upload at least one screenshot')
       return
     }
 
     setIsAnalyzing(true)
+    setProgress(0)
     setError('')
+    setResults([])
     setShowResults(false)
+    setErrorRawClaude(null)
 
     try {
-      // Create FormData to send the image
-      const formData = new FormData()
-      formData.append('image', selectedFile)
+      for (let i = 0; i < images.length; i++) {
+        const file = images[i]
+        const formData = new FormData()
+        formData.append('file', file)
 
-      // Call your Next.js API route
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData,
-      })
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Analysis failed')
+        const payload = (await uploadResponse.json()) as UploadAnalysisResponse & {
+          error?: string;
+          rawClaude?: string;
+        }
+
+        if (!uploadResponse.ok) {
+          setErrorRawClaude(payload.rawClaude ?? null)
+          throw new Error(payload.error || 'Upload failed')
+        }
+
+        const result = payload as UploadAnalysisResponse
+        setResults((prev) => [...prev, result])
+
+        setProgress(((i + 1) / images.length) * 100)
       }
 
-      const data: AnalysisResult = await response.json()
-
-      // Set the results
-      setAnalysisResult(data)
       setShowResults(true)
 
       // Scroll to results
@@ -77,20 +154,30 @@ export default function Home() {
       }, 100)
 
     } catch (err) {
-      console.error('Analysis error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to analyze conversation. Please try again.')
+      console.error('Analysis failed:', err)
+      setError(err instanceof Error ? err.message : 'Failed to analyze images. Please try again.')
     } finally {
       setIsAnalyzing(false)
+      setProgress(0)
     }
   }
 
   const handleReset = () => {
-    setSelectedFile(null)
+    setImages([])
+    setPreviews([])
+    setResults([])
     setShowResults(false)
-    setAnalysisResult(null)
     setError('')
+    setErrorRawClaude(null)
     handleStartAnalysis()
   }
+
+  // Calculate average score from all results
+  const averageScore = results.length > 0
+    ? Math.round(
+        results.reduce((sum, r) => sum + (r.analysis.analysis?.romanticInterestScore ?? 0), 0) / results.length
+      )
+    : 0
 
   const getScoreMessage = (score: number) => {
     if (score >= 80) return "Strong romantic interest detected! 💕"
@@ -114,9 +201,6 @@ export default function Home() {
             <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleStartAnalysis}>
               Get Started
             </Button>
-            <a href="/how-it-works" className="no-underline">
-              <Button variant="ghost" size="sm">How It Works</Button>
-            </a>
           </div>
         </div>
       </nav>
@@ -226,30 +310,37 @@ export default function Home() {
       <section ref={uploadRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
         <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Upload Screenshot</h2>
-            <p className="text-muted-foreground">Upload a screenshot of your conversation. Your data is processed securely and never stored.</p>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Upload Screenshots</h2>
+            <p className="text-muted-foreground">Upload screenshots of your conversation. Your data is processed securely and never stored.</p>
           </div>
 
           <div className="space-y-4">
             <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
               onClick={() => document.getElementById('screenshot-input')?.click()}
-              className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex items-center justify-center cursor-pointer group ${selectedFile
-                ? 'border-primary/60 bg-primary/5'
-                : 'border-border/60 bg-background/50 hover:bg-background/80'
-                }`}
+              className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex items-center justify-center cursor-pointer group ${
+                isDragging
+                  ? 'border-primary bg-primary/5'
+                  : images.length > 0
+                  ? 'border-primary/60 bg-primary/5'
+                  : 'border-border/60 bg-background/50 hover:bg-background/80'
+              }`}
             >
               <div className="text-center">
-                {selectedFile ? (
+                {images.length > 0 ? (
                   <>
                     <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
-                    <p className="text-foreground font-medium">{selectedFile.name}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Click to change file</p>
+                    <p className="text-foreground font-medium">{images.length} file{images.length > 1 ? 's' : ''} selected</p>
+                    <p className="text-sm text-muted-foreground mt-1">Click to add more</p>
                   </>
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary mx-auto mb-2 transition-colors" />
                     <p className="text-foreground font-medium">Click to upload or drag and drop</p>
-                    <p className="text-sm text-muted-foreground">PNG, JPG, or GIF (max 10MB)</p>
+                    <p className="text-sm text-muted-foreground">PNG, JPG, GIF, or WEBP (max 10MB)</p>
                   </>
                 )}
               </div>
@@ -258,26 +349,88 @@ export default function Home() {
             <input
               id="screenshot-input"
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/gif"
+              accept="image/*"
+              multiple
               className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  handleFileSelect(e.target.files[0])
-                }
-              }}
+              onChange={handleFileInput}
             />
+
+            {/* Image Previews */}
+            {previews.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-border/40"
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeImage(index)
+                      }}
+                      disabled={isAnalyzing}
+                      className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      aria-label="Remove image"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            {isAnalyzing && (
+              <div className="mt-4">
+                <div className="w-full bg-muted rounded-full h-2.5">
+                  <div
+                    className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2 text-center">
+                  Analyzing... {Math.round(progress)}%
+                </p>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
               <div className="flex items-start gap-2 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">{error}</p>
+                <div className="flex-1">
+                  <p className="text-sm text-destructive">{error}</p>
+                  {errorRawClaude && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs text-destructive/80 hover:text-destructive">
+                        Show raw Claude response
+                      </summary>
+                      <pre className="mt-2 text-xs bg-destructive/5 p-2 rounded overflow-auto max-h-40">
+                        {errorRawClaude}
+                      </pre>
+                    </details>
+                  )}
+                </div>
               </div>
             )}
 
             <Button
               onClick={handleAnalyze}
-              disabled={!selectedFile || isAnalyzing}
+              disabled={images.length === 0 || isAnalyzing}
               size="lg"
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             >
@@ -298,7 +451,7 @@ export default function Home() {
       </section>
 
       {/* Results Section */}
-      {showResults && analysisResult && (
+      {showResults && results.length > 0 && (
         <section ref={resultsRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
           <div className="space-y-8">
             {/* Main Score Card */}
@@ -307,30 +460,100 @@ export default function Home() {
 
               <div className="space-y-6">
                 <div>
-                  <p className="text-muted-foreground mb-2">Romantic Interest Score</p>
+                  <p className="text-muted-foreground mb-2">Average Romantic Interest Score</p>
                   <div className="flex items-end gap-4">
-                    <span className="text-6xl font-bold text-primary">{analysisResult.score}%</span>
+                    <span className="text-6xl font-bold text-primary">{averageScore}%</span>
                     <div className="flex-1">
                       <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-2">
                         <div
                           className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                          style={{ width: `${analysisResult.score}%` }}
+                          style={{ width: `${averageScore}%` }}
                         ></div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{getScoreMessage(analysisResult.score)}</p>
+                      <p className="text-sm text-muted-foreground">{getScoreMessage(averageScore)}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Overall Assessment */}
-                <div className="pt-6 border-t border-primary/20">
-                  <h3 className="font-semibold text-foreground mb-4">Overall Assessment</h3>
-                  <p className="text-foreground/80 leading-relaxed">
-                    {analysisResult.overallAssessment}
-                  </p>
-                </div>
+                {results[0]?.analysis?.analysis?.summary && (
+                  <div className="pt-6 border-t border-primary/20">
+                    <h3 className="font-semibold text-foreground mb-4">Overall Assessment</h3>
+                    <p className="text-foreground/80 leading-relaxed">
+                      {results[0].analysis.analysis.summary}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Detailed Results for Each Screenshot */}
+            {results.map((result, index) => {
+              const payload = result.analysis.analysis
+              const insights = payload?.messageInsights ?? []
+
+              return (
+                <div key={index} className="bg-card border border-border/40 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Screenshot {index + 1}
+                    </h3>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">
+                        {payload?.romanticInterestScore ?? '--'}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Confidence: {payload?.confidence ?? 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {payload?.suggestions?.length ? (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-foreground mb-2">Coaching Tips</h4>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        {payload.suggestions.map((suggestion, idx) => (
+                          <li key={idx} className="flex gap-2">
+                            <span className="text-primary">•</span>
+                            <span>{suggestion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  {insights.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3">Message Insights</h4>
+                      <div className="space-y-2">
+                        {insights.map((insight) => {
+                          const impactColors = {
+                            helped: 'border-green-200 bg-green-50 text-green-900',
+                            neutral: 'border-yellow-200 bg-yellow-50 text-yellow-900',
+                            hurt: 'border-red-200 bg-red-50 text-red-900',
+                          }
+                          return (
+                            <div
+                              key={insight.messageId}
+                              className={`rounded-lg border p-3 text-sm ${impactColors[insight.impact]}`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs uppercase font-semibold">{insight.impact}</span>
+                                <span className="text-xs">
+                                  {insight.sender === 'personB' ? 'You' : 'Them'}
+                                </span>
+                              </div>
+                              <p className="font-medium mb-1">{insight.explanation}</p>
+                              <p className="text-xs opacity-75">Confidence: {insight.confidence}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
 
             {/* CTA */}
             <Button
