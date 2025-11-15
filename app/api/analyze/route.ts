@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 
 import { parseClaudeResponse, runScreenshotAnalysis } from '@/lib/analysis';
