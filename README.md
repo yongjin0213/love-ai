@@ -1,10 +1,10 @@
-# Love Data
-Love Data is an AI-powered text analzyer that takes in text messages and helps users understand relationship dynamics through conversation patterns. This tool will output a Love Score, a 0-100 score that reflects compatabilty, and feedback on what went well and what went poorly during the conversation. 
+# Arrows
+Arrows is an AI-powered text analzyer that takes in text messages and helps users understand relationship dynamics through conversation patterns. This tool will output a Love Score, a 0-100 score that reflects compatabilty, and feedback on what went well and what went poorly during the conversation. 
 
-## About This Project
+## Project overview
 
 ### What It Does
-Love Bot analyzes text message conversations to identify:
+Arrows analyzes text message conversations to identify:
 
 - Communication patterns - Message lengths, unique language, and engagement levels
 - Sentiment analysis - Emotional tone and enthusiasm in messages
@@ -22,18 +22,33 @@ The bot generates a percentage score representing estimated interest based on va
 - Score Generation - Produces an interest percentage with detailed breakdown
 - Insights Report - Provides actionable feedback about the conversation dynamics
 
+## Installation/setup instructions
+We used Vercel to deploy our website. [Link to Deployment](https://arrows-liart.vercel.app/)
+## Tech stack
 
-## Technology Stack
+Programming languages: **Java Script**
 
-Fullstack: **Next.js**
+Frameworks and libraries: **Next.js and Claude API**
 
-AI/ML: **Claude API**
+API: **Claude API**
+
+Databases: **None**
+
+Deployment Platform: **Vercel**
+
+## Challenges & solutions
+
+We had a difficult time connecting our frontend to backend. To combat this we had a meeting between our backend and frontend developers to confirm where the .json files would be exchanged between the frontend and backend. We learned a lot about communication specifically making sure the product vision is aligned between both ends to make sure they meet accurately in the middle. Next time we want to plan out more ahead and have more occasional meetings to check in on each others.
+
+## Future plans
+
+If we had more time, we would've developed our own RAG model to have a better algorithm for deciding the romantic interest value. Similarly, we would've used federated learning to ensure our users privacy while continuing to train the model to become stronger and more accurate.
 
 ## Contributers
-- **Yongjin Lee**
-- **Kathy Lim**
-- **Aiden Joo**
-- **Mark Sheen**
+- **Yongjin Lee** - Backend
+- **Kathy Lim** - Frontend
+- **Aiden Joo** - Backend
+- **Mark Sheen** - PM and Design
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

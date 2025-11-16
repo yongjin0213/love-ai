@@ -23,7 +23,7 @@ export default function Home() {
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
-  
+
   // Analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [results, setResults] = useState<UploadAnalysisResponse[]>([])
@@ -32,11 +32,11 @@ export default function Home() {
   const [cupidResponse, setCupidResponse] = useState<CupidResponse | null>(null)
   const [isCupidLoading, setIsCupidLoading] = useState(false)
   const [cupidError, setCupidError] = useState<string | null>(null)
-  
+
   // Error state
   const [error, setError] = useState<string>('')
   const [errorRawClaude, setErrorRawClaude] = useState<string | null>(null)
-  
+
   // Refs
   const uploadRef = useRef<HTMLElement>(null)
   const resultsRef = useRef<HTMLElement>(null)
@@ -234,8 +234,8 @@ export default function Home() {
   // Calculate average score from all results
   const averageScore = results.length > 0
     ? Math.round(
-        results.reduce((sum, r) => sum + (r.analysis.analysis?.romanticInterestScore ?? 0), 0) / results.length
-      )
+      results.reduce((sum, r) => sum + (r.analysis.analysis?.romanticInterestScore ?? 0), 0) / results.length
+    )
     : 0
 
   const getScoreMessage = (score: number) => {
@@ -251,13 +251,13 @@ export default function Home() {
       <nav className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            
-                <img 
-                  src="/love-ai.svg" 
-                  alt="Arrows logo" 
-                  className="w-5 h-5 text-primary"
-                />
-            
+
+            <img
+              src="/love-ai.svg"
+              alt="Arrows logo"
+              className="w-5 h-5 text-primary"
+            />
+
             <span className="font-semibold text-lg text-foreground">Arrows</span>
           </div>
           <div className="flex items-center gap-4">
@@ -278,7 +278,7 @@ export default function Home() {
                 <span className="text-sm text-accent font-medium">AI-Powered Analysis</span>
               </div>
               <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight text-balance mb-6">
-                Never Second Guess <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Love Again</span>
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Arrows:</span> Point Your Heart in the Right Direction
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
                 Stop overthinking. Get AI-driven insights into romantic emotions from your text conversations.
@@ -392,13 +392,12 @@ export default function Home() {
                 }
                 document.getElementById('screenshot-input')?.click()
               }}
-              className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex items-center justify-center cursor-pointer group ${
-                isDragging
-                  ? 'border-primary bg-primary/5'
-                  : images.length > 0
+              className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex items-center justify-center cursor-pointer group ${isDragging
+                ? 'border-primary bg-primary/5'
+                : images.length > 0
                   ? 'border-primary/60 bg-primary/5'
                   : 'border-border/60 bg-background/50 hover:bg-background/80'
-              }`}
+                }`}
             >
               <div className="text-center">
                 {images.length > 0 ? (
@@ -509,244 +508,246 @@ export default function Home() {
       </section>
 
       {/* Results Section */}
-      {showResults && results.length > 0 && (
-        <section ref={resultsRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
-          <div className="space-y-8">
-            {/* Main Score Card */}
-            <div className="relative rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 p-12 overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+      {
+        showResults && results.length > 0 && (
+          <section ref={resultsRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
+            <div className="space-y-8">
+              {/* Main Score Card */}
+              <div className="relative rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 p-12 overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
 
-              <div className="space-y-6">
-                <div>
-                  <p className="text-muted-foreground mb-2">Average Romantic Interest Score</p>
-                  <div className="flex items-end gap-4">
-                    <span className="text-6xl font-bold text-primary">{averageScore}%</span>
-                    <div className="flex-1">
-                      <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-2">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                          style={{ width: `${averageScore}%` }}
-                        ></div>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-muted-foreground mb-2">Average Romantic Interest Score</p>
+                    <div className="flex items-end gap-4">
+                      <span className="text-6xl font-bold text-primary">{averageScore}%</span>
+                      <div className="flex-1">
+                        <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-2">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                            style={{ width: `${averageScore}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{getScoreMessage(averageScore)}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{getScoreMessage(averageScore)}</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Overall Assessment */}
-                {results[0]?.analysis?.analysis?.summary && (
-                  <div className="pt-6 border-t border-primary/20">
-                    <h3 className="font-semibold text-foreground mb-4">Overall Assessment</h3>
-                    <p className="text-foreground/80 leading-relaxed">
-                      {results[0].analysis.analysis.summary}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Detailed Results for Each Screenshot */}
-            {results.map((result, index) => {
-              const payload = result.analysis.analysis
-              const insights = payload?.messageInsights ?? []
-
-              return (
-                <div key={index} className="bg-card border border-border/40 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Screenshot {index + 1}
-                    </h3>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">
-                        {payload?.romanticInterestScore ?? '--'}%
+                  {/* Overall Assessment */}
+                  {results[0]?.analysis?.analysis?.summary && (
+                    <div className="pt-6 border-t border-primary/20">
+                      <h3 className="font-semibold text-foreground mb-4">Overall Assessment</h3>
+                      <p className="text-foreground/80 leading-relaxed">
+                        {results[0].analysis.analysis.summary}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Confidence: {payload?.confidence ?? 'Unknown'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {payload?.suggestions?.length ? (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-foreground mb-2">Coaching Tips</h4>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        {payload.suggestions.map((suggestion, idx) => (
-                          <li key={idx} className="flex gap-2">
-                            <span className="text-primary">•</span>
-                            <span>{suggestion}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  {insights.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-3">Message Insights</h4>
-                      <div className="space-y-2">
-                        {insights.map((insight) => {
-                          const impactColors = {
-                            helped: 'border-green-200 bg-green-50 text-green-900',
-                            neutral: 'border-yellow-200 bg-yellow-50 text-yellow-900',
-                            hurt: 'border-red-200 bg-red-50 text-red-900',
-                          }
-                          return (
-                            <div
-                              key={insight.messageId}
-                              className={`rounded-lg border p-3 text-sm ${impactColors[insight.impact]}`}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs uppercase font-semibold">{insight.impact}</span>
-                                <span className="text-xs">
-                                  {insight.sender === 'personB' ? 'You' : 'Target'}
-                                </span>
-                              </div>
-                              <p className="font-medium mb-1">{insight.explanation}</p>
-                              {(insight.messageText) && (
-                                <p className="text-xs text-foreground/90 mb-1">
-                                  &ldquo;{insight.messageText}&rdquo;
-                                </p>
-                              )}
-                              <p className="text-xs opacity-75">Confidence: {insight.confidence}</p>
-                            </div>
-                          )
-                        })}
-                      </div>
                     </div>
                   )}
+                </div>
+              </div>
 
-                  {payload?.parsedMessages?.length ? (
-                    <div className="mt-6 rounded-xl border border-border/60 bg-card/40 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="text-base font-semibold text-foreground">Ask Cupid</h4>
-                          <p className="text-xs text-muted-foreground">
-                            Ask follow-up questions and get personalized guidance.
-                          </p>
+              {/* Detailed Results for Each Screenshot */}
+              {results.map((result, index) => {
+                const payload = result.analysis.analysis
+                const insights = payload?.messageInsights ?? []
+
+                return (
+                  <div key={index} className="bg-card border border-border/40 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Screenshot {index + 1}
+                      </h3>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">
+                          {payload?.romanticInterestScore ?? '--'}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Confidence: {payload?.confidence ?? 'Unknown'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {payload?.suggestions?.length ? (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-foreground mb-2">Coaching Tips</h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {payload.suggestions.map((suggestion, idx) => (
+                            <li key={idx} className="flex gap-2">
+                              <span className="text-primary">•</span>
+                              <span>{suggestion}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {insights.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-3">Message Insights</h4>
+                        <div className="space-y-2">
+                          {insights.map((insight) => {
+                            const impactColors = {
+                              helped: 'border-green-200 bg-green-50 text-green-900',
+                              neutral: 'border-yellow-200 bg-yellow-50 text-yellow-900',
+                              hurt: 'border-red-200 bg-red-50 text-red-900',
+                            }
+                            return (
+                              <div
+                                key={insight.messageId}
+                                className={`rounded-lg border p-3 text-sm ${impactColors[insight.impact]}`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs uppercase font-semibold">{insight.impact}</span>
+                                  <span className="text-xs">
+                                    {insight.sender === 'personB' ? 'You' : 'Target'}
+                                  </span>
+                                </div>
+                                <p className="font-medium mb-1">{insight.explanation}</p>
+                                {(insight.messageText) && (
+                                  <p className="text-xs text-foreground/90 mb-1">
+                                    &ldquo;{insight.messageText}&rdquo;
+                                  </p>
+                                )}
+                                <p className="text-xs opacity-75">Confidence: {insight.confidence}</p>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
-                      <textarea
-                        value={cupidQuestion}
-                        onChange={(e) => setCupidQuestion(e.target.value)}
-                        placeholder="e.g. How do I ask Target out after this conversation?"
-                        rows={3}
-                        className="w-full rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground focus:border-primary focus:outline-none"
-                        disabled={isCupidLoading || isAnalyzing}
-                      />
-                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <Button
-                          size="sm"
-                          onClick={handleAskCupid}
-                          disabled={
-                            isCupidLoading ||
-                            isAnalyzing ||
-                            !cupidQuestion.trim() ||
-                            payload.parsedMessages.length === 0
-                          }
-                        >
-                          {isCupidLoading ? 'Cupid is thinking...' : 'Ask Cupid'}
-                        </Button>
-                        {cupidError && (
-                          <p className="text-xs text-destructive">{cupidError}</p>
+                    )}
+
+                    {payload?.parsedMessages?.length ? (
+                      <div className="mt-6 rounded-xl border border-border/60 bg-card/40 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="text-base font-semibold text-foreground">Ask Cupid</h4>
+                            <p className="text-xs text-muted-foreground">
+                              Ask follow-up questions and get personalized guidance.
+                            </p>
+                          </div>
+                        </div>
+                        <textarea
+                          value={cupidQuestion}
+                          onChange={(e) => setCupidQuestion(e.target.value)}
+                          placeholder="e.g. How do I ask Target out after this conversation?"
+                          rows={3}
+                          className="w-full rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground focus:border-primary focus:outline-none"
+                          disabled={isCupidLoading || isAnalyzing}
+                        />
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <Button
+                            size="sm"
+                            onClick={handleAskCupid}
+                            disabled={
+                              isCupidLoading ||
+                              isAnalyzing ||
+                              !cupidQuestion.trim() ||
+                              payload.parsedMessages.length === 0
+                            }
+                          >
+                            {isCupidLoading ? 'Cupid is thinking...' : 'Ask Cupid'}
+                          </Button>
+                          {cupidError && (
+                            <p className="text-xs text-destructive">{cupidError}</p>
+                          )}
+                        </div>
+                        {cupidResponse && (
+                          <div className="mt-4 rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground">
+                            <p className="font-semibold mb-2">Cupid says:</p>
+                            <p className="text-muted-foreground">{cupidResponse.answer}</p>
+                            {cupidResponse.tips?.length ? (
+                              <div className="mt-3">
+                                <p className="text-xs font-semibold uppercase text-foreground tracking-wide mb-1">
+                                  Coaching Tips
+                                </p>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                  {cupidResponse.tips.map((tip, tipIndex) => (
+                                    <li key={tipIndex}>{tip}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null}
+                          </div>
                         )}
                       </div>
-                      {cupidResponse && (
-                        <div className="mt-4 rounded-lg border border-border/50 bg-background/80 p-3 text-sm text-foreground">
-                          <p className="font-semibold mb-2">Cupid says:</p>
-                          <p className="text-muted-foreground">{cupidResponse.answer}</p>
-                          {cupidResponse.tips?.length ? (
-                            <div className="mt-3">
-                              <p className="text-xs font-semibold uppercase text-foreground tracking-wide mb-1">
-                                Coaching Tips
-                              </p>
-                              <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                {cupidResponse.tips.map((tip, tipIndex) => (
-                                  <li key={tipIndex}>{tip}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
+                )
+              })}
+
+              {/* CTA */}
+              <Button
+                onClick={handleReset}
+                size="lg"
+                variant="outline"
+                className="w-full"
+              >
+                Analyze Another Conversation
+              </Button>
+
+              {/* Ethical Disclaimer */}
+              <div className="mt-12 pt-8 border-t border-border/40">
+                <div className="bg-muted/30 border border-border/40 rounded-lg p-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 flex items-center gap-3">
+                    💜 Ethical Considerations
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed mb-6">
+                    This analysis is based on text patterns and should not be treated as definitive proof of someone&rsquo;s feelings. Human emotions are complex and context-dependent. Always prioritize:
+                  </p>
+                  <ul className="space-y-3 text-muted-foreground">
+                    <li className="flex gap-2">
+                      <span className="text-primary font-bold">•</span>
+                      <div>
+                        <strong className="text-foreground">Consent:</strong> Only analyze conversations you have permission to share
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-primary font-bold">•</span>
+                      <div>
+                        <strong className="text-foreground">Direct Communication:</strong> Use this as a starting point, not a replacement for honest conversations
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-primary font-bold">•</span>
+                      <div>
+                        <strong className="text-foreground">Respect:</strong> Respect the other person&rsquo;s boundaries and pace
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-primary font-bold">•</span>
+                      <div>
+                        <strong className="text-foreground">Mental Health:</strong> If you&rsquo;re obsessing over signals, consider talking to a trusted friend or professional
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-primary font-bold">•</span>
+                      <div>
+                        <strong className="text-foreground">Privacy:</strong> Your data is never stored or shared with third parties
+                      </div>
+                    </li>
+                  </ul>
                 </div>
-              )
-            })}
-
-            {/* CTA */}
-            <Button
-              onClick={handleReset}
-              size="lg"
-              variant="outline"
-              className="w-full"
-            >
-              Analyze Another Conversation
-            </Button>
-
-            {/* Ethical Disclaimer */}
-            <div className="mt-12 pt-8 border-t border-border/40">
-              <div className="bg-muted/30 border border-border/40 rounded-lg p-8">
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 flex items-center gap-3">
-                  💜 Ethical Considerations
-                </h2>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  This analysis is based on text patterns and should not be treated as definitive proof of someone&rsquo;s feelings. Human emotions are complex and context-dependent. Always prioritize:
-                </p>
-                <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <div>
-                      <strong className="text-foreground">Consent:</strong> Only analyze conversations you have permission to share
-                    </div>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <div>
-                      <strong className="text-foreground">Direct Communication:</strong> Use this as a starting point, not a replacement for honest conversations
-                    </div>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <div>
-                      <strong className="text-foreground">Respect:</strong> Respect the other person&rsquo;s boundaries and pace
-                    </div>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <div>
-                      <strong className="text-foreground">Mental Health:</strong> If you&rsquo;re obsessing over signals, consider talking to a trusted friend or professional
-                    </div>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <div>
-                      <strong className="text-foreground">Privacy:</strong> Your data is never stored or shared with third parties
-                    </div>
-                  </li>
-                </ul>
               </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )
+      }
 
       {/* Footer */}
       <footer className="border-t border-border/40 bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <img 
-                  src="/love-ai.svg" 
-                  alt="Arrows logo" 
-                  className="w-5 h-5 text-primary"
-                />
+              <img
+                src="/love-ai.svg"
+                alt="Arrows logo"
+                className="w-5 h-5 text-primary"
+              />
               <span className="font-semibold text-foreground">Arrows</span>
             </div>
             <p className="text-sm text-muted-foreground">© 2025 Arrows. All rights reserved.</p>
           </div>
         </div>
       </footer>
-    </main>
+    </main >
   )
 }
